@@ -1,0 +1,158 @@
+rules_version = '2';
+
+// ===========================================================================
+// SmartTask - Firestore security rules
+//
+// These rules, not the UI, are what actually enforce permissions. Hiding a
+// button only hides a button; every read and write below is checked again by
+// Firestore against the caller's own user document.
+//
+// Deploy with:  firebase deploy --only firestore:rules
+// ===========================================================================
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ---------------------------------------------------------------- helpers
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    function userExists() {
+      return signedIn()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    // A deactivated account keeps its login but loses every capability.
+    function active() {
+      return userExists() && userDoc().isActive == true;
+    }
+
+    function hasRole(role) {
+      return active() && userDoc().role == role;
+    }
+
+    function isAdmin()    { return hasRole('admin'); }
+    function isHod()      { return hasRole('hod'); }
+    function isLecturer() { return hasRole('lecturer'); }
+
+    // Admin and HoD both get department-wide visibility.
+    function isStaff() { return isAdmin() || isHod(); }
+
+    function changed(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    function unchanged(field) {
+      return request.resource.data[field] == resource.data[field];
+    }
+
+    function nonEmpty(value) {
+      return value is string && value.trim().size() > 0;
+    }
+
+    // ------------------------------------------------------------------ users
+
+    match /users/{userId} {
+
+      // (1) A user can always read their own document - even when deactivated,
+      //     so the app can tell them why they are locked out.
+      // (7) Nobody may LIST the users collection unless hod or admin.
+      allow get:  if signedIn() && (request.auth.uid == userId || isStaff());
+      allow list: if isStaff();
+
+      // Self-registration only, and only ever as a lecturer. The role field is
+      // pinned here so the registration form can never grant itself privileges.
+      allow create: if signedIn()
+                    && request.auth.uid == userId
+                    && request.resource.data.role == 'lecturer'
+                    && request.resource.data.isActive == true
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email == request.auth.token.email
+                    && nonEmpty(request.resource.data.fullName)
+                    && request.resource.data.department is string;
+
+      // (2) Only an admin may write `role`. Everyone else may edit their own
+      //     profile as long as role and isActive stay exactly as they were.
+      allow update: if isAdmin()
+                       ? request.resource.data.role in ['admin', 'hod', 'lecturer']
+                         && request.resource.data.uid == resource.data.uid
+                       : request.auth.uid == userId
+                         && unchanged('role')
+                         && unchanged('isActive')
+                         && unchanged('email')
+                         && changed(['fullName', 'department']);
+
+      allow delete: if isAdmin();
+    }
+
+    // ------------------------------------------------------------------ tasks
+
+    match /tasks/{taskId} {
+
+      // (3) A lecturer sees a task only when it is assigned to them. Because
+      //     the condition names resource.data, a lecturer's *query* must carry
+      //     `where('assignedTo', '==', uid)` or Firestore rejects it outright.
+      // (4) hod and admin read everything.
+      allow read: if isStaff()
+                  || (isLecturer() && resource.data.assignedTo == request.auth.uid);
+
+      // (5) Only a hod may create a task, and only in the name of their own
+      //     account, always starting in 'incoming'.
+      allow create: if isHod()
+                    && request.resource.data.assignedBy == request.auth.uid
+                    && request.resource.data.status == 'incoming'
+                    && nonEmpty(request.resource.data.title)
+                    && nonEmpty(request.resource.data.assignedTo)
+                    && request.resource.data.priority in ['low', 'medium', 'high']
+                    && request.resource.data.deadline is timestamp
+                    && request.resource.data.progressNote == ''
+                    && request.resource.data.declineReason == ''
+                    && request.resource.data.completedAt == null
+                    && request.resource.data.lastReminderSentAt == null;
+
+      // A hod may re-assign, re-schedule or re-word a task, but may NOT touch
+      // the status: only the assigned lecturer reports progress.
+      function hodEdit() {
+        return isHod()
+               && changed(['title', 'description', 'assignedTo', 'assignedToName',
+                           'priority', 'deadline', 'updatedAt'])
+               && nonEmpty(request.resource.data.title)
+               && request.resource.data.priority in ['low', 'medium', 'high']
+               && request.resource.data.deadline is timestamp;
+      }
+
+      // (6) A lecturer may change status / progressNote / declineReason, and
+      //     only on their own tasks. updatedAt and completedAt are bookkeeping
+      //     fields the app maintains alongside the status change.
+      //     Note what is NOT in this list: assignedTo, deadline, priority and
+      //     lastReminderSentAt are all beyond a lecturer's reach.
+      function lecturerUpdate() {
+        return isLecturer()
+               && resource.data.assignedTo == request.auth.uid
+               && changed(['status', 'progressNote', 'declineReason',
+                           'updatedAt', 'completedAt'])
+               && request.resource.data.status
+                    in ['incoming', 'ongoing', 'completed', 'cannot_complete']
+               && request.resource.data.progressNote is string
+               // Declining always requires a written reason.
+               && (request.resource.data.status != 'cannot_complete'
+                   || nonEmpty(request.resource.data.declineReason));
+      }
+
+      allow update: if hodEdit() || lecturerUpdate();
+
+      allow delete: if isHod();
+    }
+
+    // Anything not matched above is denied.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

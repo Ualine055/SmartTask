@@ -491,8 +491,34 @@ Check `isActive` on their user document. An admin can flip it on
 `/admin/users`.
 
 **`npm run test:rules` says "Could not spawn java"**
-Java is not on the `PATH` that Node sees. Install a JDK, then set `JAVA_HOME`
-and add `%JAVA_HOME%\bin` to your `PATH`, and open a new terminal.
+The Firestore emulator needs Java. The message is misleading, though: it also
+appears when Java *is* installed but the first `java.exe` on `PATH` is broken.
+
+Check which one Windows actually resolves:
+
+```powershell
+(Get-Command java).Source
+java -version
+```
+
+If that prints `C:\ProgramData\Oracle\Java\javapath\java.exe` and then fails with
+*"No application is associated with the specified file"*, that entry is a stale
+Oracle stub left by an uninstalled runtime, and it is shadowing a working
+install. Fix it in **System Properties -> Environment Variables -> System
+variables -> Path** (needs an administrator): remove
+`C:\ProgramData\Oracle\Java\javapath`, or move it below the entry that works,
+then open a new terminal.
+
+To confirm the tests pass before changing anything system-wide, prepend the
+working directory for one session only:
+
+```powershell
+$env:PATH = "C:\Program Files\Common Files\Oracle\Java\javapath;" + $env:PATH
+npm run test:rules
+```
+
+If no `java` is found at all, install a JDK (Temurin is fine), then set
+`JAVA_HOME` and add `%JAVA_HOME%\bin` to `PATH`.
 
 **Reminder emails are not arriving**
 

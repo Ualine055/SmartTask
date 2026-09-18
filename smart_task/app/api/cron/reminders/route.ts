@@ -18,15 +18,19 @@ import { PRIORITY_LABELS, type Priority } from "@/lib/types";
  *
  * Firebase's free Spark plan does not allow scheduled Cloud Functions, so the
  * schedule lives outside Firebase: Vercel Cron (see vercel.json) calls this
- * route hourly. Any cron service that can send a header works just as well.
+ * route daily at 06:00 - the free Hobby plan allows one cron run per day. Any
+ * cron service that can send a header works just as well, and a shorter
+ * interval needs only a schedule change.
  *
  * A task gets a reminder when all three hold:
  *   1. the deadline is within the next 24 hours, or has already passed;
  *   2. the status is still 'incoming' or 'ongoing';
  *   3. no reminder has gone out in the last 24 hours.
  *
- * Rule 3 is what makes an hourly schedule safe: re-running this route sends
- * nothing extra, so a missed or duplicated cron tick does no harm.
+ * Rule 3 is what makes any schedule safe: re-running this route sends nothing
+ * extra, so a duplicated tick, a manual test, or moving to an hourly schedule
+ * does no harm. A missed tick is caught by the next run, because a deadline
+ * that has already passed still qualifies.
  */
 
 /** Never send more than this in one run - protects the free email quota. */

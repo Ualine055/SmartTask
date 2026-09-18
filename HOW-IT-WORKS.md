@@ -217,7 +217,7 @@ This is a genuine design decision, not a shortcut. Be ready to explain it.
 
 ```
 Cron service (Vercel Cron / cron-job.org)
-        │  calls once an hour, with a secret
+        │  calls once a day at 06:00, with a secret
         ▼
 /api/cron/reminders
         │
@@ -236,6 +236,41 @@ Two details worth pointing out:
 - **The 24-hour check makes it safe to re-run.** If the cron fires twice, or you test it manually, nobody gets duplicate emails. `lastReminderSentAt` is only stamped *after* a successful send, so a failure is retried next time rather than silently lost.
 
 There's also `?dryRun=1`, which shows exactly which tasks qualify without sending anything — useful for demonstrating it live without spamming anyone.
+
+### Why daily, and what that costs
+
+`vercel.json` schedules `0 6 * * *` — **once a day at 06:00**, not hourly. That is forced
+by the same kind of constraint as the Spark plan: Vercel's free Hobby plan permits only one
+cron invocation per day.
+
+Be precise about the consequence, because it is a fair question:
+
+- **Nothing is ever missed.** The look-ahead window is 24 hours and the interval is 24
+  hours, so consecutive runs cover a continuous stretch of time with no gap. Every open
+  task gets at least one reminder before its deadline.
+- **But the notice varies.** A lecturer gets somewhere between 0 and 24 hours' warning,
+  depending where the deadline falls relative to 06:00 — not reliably a full day.
+- An overdue task keeps qualifying, so it is reminded once a day until it is completed or
+  declined.
+
+On a paid plan the same route on an hourly schedule would tighten the notice to within an
+hour, with no code change. The 24-hour guard already makes that safe.
+
+### The email provider
+
+Sending goes through **Resend**, called with a plain `fetch` POST in
+[lib/email.ts](smart_task/lib/email.ts) rather than the npm package — one HTTP request, one
+fewer dependency, and swapping provider means editing that file alone.
+
+Two things to know before a live demo:
+
+- **`RESEND_API_KEY` must be set** in `.env.local`. Without it the route refuses the run
+  with a `500` rather than failing silently.
+- **The sender address decides who can receive.** With the shared
+  `onboarding@resend.dev` sender and no verified domain, Resend only delivers to the
+  address the account was registered with. The seeded lecturer addresses
+  (`lecturer1@uok.ac.rw` and similar) are fictional, so for a demo that actually shows an
+  email arriving, point one account at a real inbox you control.
 
 ---
 
@@ -273,4 +308,5 @@ Both use the **service account** key in `.env.local`. That key bypasses the secu
 | "How do you stop a lecturer seeing others' tasks?" | Rule 3 — and I can demo it failing in DevTools. |
 | "Why no overdue status?" | Deriving it needs no scheduled job and can never go stale. |
 | "Why not Cloud Functions for reminders?" | Spark plan doesn't allow scheduling. External cron + protected route achieves the same on free tier. |
+| "How often do reminders run?" | Once daily at 06:00 — Vercel's free plan allows one cron run per day. No task is missed, but notice varies from 0 to 24 hours. Hourly needs only a schedule change. |
 | "How do you know the rules work?" | 33 automated tests against the emulator — `npm run test:rules`. |

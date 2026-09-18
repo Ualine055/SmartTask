@@ -556,6 +556,11 @@ If no `java` is found at all, install a JDK (Temurin is fine), then set
 
 **Reminder emails are not arriving**
 
+First run `npm run check:email` — it reports whether `RESEND_API_KEY` is set, and with
+an address (`npm run check:email -- you@example.com`) it sends one real test message, so
+you can tell a configuration problem apart from a logic problem.
+
+
 - Check `RESEND_API_KEY` is set and the route returns `"sent": 1` or more.
 - With `onboarding@resend.dev` as the sender, Resend only delivers to the
   account owner's address.

@@ -11,7 +11,8 @@
     "test:rules": "firebase emulators:exec --only firestore --project smarttask-rules-test \"node --test tests/rules.test.mjs\"",
     "emulators": "firebase emulators:start --only auth,firestore --project demo-smarttask",
     "seed:emulator": "node scripts/seed.mjs",
-    "import:key": "node scripts/import-service-account.mjs"
+    "import:key": "node scripts/import-service-account.mjs",
+    "check:email": "node --env-file=.env.local scripts/check-email.mjs"
   },
   "dependencies": {
     "@opentelemetry/api": "^1.9.1",

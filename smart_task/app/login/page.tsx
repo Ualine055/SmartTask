@@ -11,7 +11,7 @@ import { ConfigNotice } from "@/components/protected";
 import { Alert, Button, Field, Input, Spinner } from "@/components/ui";
 import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import { HOME_FOR_ROLE } from "@/lib/types";
+import { homeAfterSignIn } from "@/lib/types";
 
 export default function LoginPage() {
   return (
@@ -34,9 +34,11 @@ function LoginForm() {
   const next = searchParams.get("next");
 
   // Already signed in? Send them straight to the home screen for their role.
+  // `next` is only honoured when this role can actually open it - see
+  // homeAfterSignIn - so signing in never lands on "Not available for your role".
   useEffect(() => {
     if (loading || !firebaseUser || !profile) return;
-    router.replace(next || HOME_FOR_ROLE[profile.role]);
+    router.replace(homeAfterSignIn(next, profile.role));
   }, [loading, firebaseUser, profile, next, router]);
 
   if (!isFirebaseConfigured) return <ConfigNotice />;

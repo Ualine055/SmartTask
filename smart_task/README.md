@@ -536,8 +536,19 @@ To confirm the tests pass before changing anything system-wide, prepend the
 working directory for one session only:
 
 ```powershell
-$env:PATH = "C:\Program Files\Common Files\Oracle\Java\javapath;" + $env:PATH
+$env:PATH = "C:\Program Files\Java\jdk-24\bin;" + $env:PATH
 npm run test:rules
+```
+
+(Adjust the version folder to whatever is under `C:\Program Files\Java\`. Pointing at
+the JDK's own `bin` is more reliable than either Oracle `javapath` stub.)
+
+If a run is interrupted, the emulator can keep port 8080 and block the next run with
+*"Could not start Firestore Emulator, port taken"*. Find and stop it with:
+
+```powershell
+Get-NetTCPConnection -LocalPort 8080 -State Listen | Select-Object OwningProcess
+Stop-Process -Id <that id> -Force
 ```
 
 If no `java` is found at all, install a JDK (Temurin is fine), then set

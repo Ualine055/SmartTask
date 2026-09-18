@@ -41,12 +41,13 @@ The important thing to understand: **the browser talks to Firebase directly.** T
        │                                │ READ AND WRITE  │
        │                                └─────────────────┘
        │
-       │  only 2 things go through a server:
+       │  only these go through a server:
        ▼
 ┌───────────────────────────┐
 │  Next.js API routes       │
 │  /api/admin/users         │  create an account
-│  /api/cron/reminders      │  send reminder emails
+│  /api/cron/reminders      │  deadline reminder emails
+│  /api/notify/task         │  "it just happened" emails
 └───────────────────────────┘
 ```
 
@@ -272,6 +273,36 @@ Two things to know before a live demo:
   (`lecturer1@uok.ac.rw` and similar) are fictional, so for a demo that actually shows an
   email arriving, point one account at a real inbox you control.
 
+### The three emails the system sends
+
+The cron job above covers deadlines. Two more go out the moment something happens,
+through [/api/notify/task](smart_task/app/api/notify/task/route.ts):
+
+| When | Who gets it | Subject |
+|---|---|---|
+| A HoD assigns (or reassigns) a task | the lecturer | *New task assigned: …* |
+| A lecturer starts, completes or declines | the HoD who assigned it | *Completed: … — Aline Uwineza* |
+| A deadline is within 24h, or has passed | the lecturer | *Due in 24 hours: …* |
+
+**Why these need a server route.** Assigning a task is a direct browser-to-Firestore
+write, so nothing server-side ever notices it — and with no Cloud Functions on the
+Spark plan, there is no database trigger to hang an email on. The browser cannot send
+the mail itself either, because that would mean shipping `RESEND_API_KEY` to the
+client, where anyone could read it. So the page writes to Firestore and then asks this
+route to do the emailing.
+
+**What stops it being abused.** The route takes nothing but a task id. It verifies the
+caller's ID token, re-reads the task with the Admin SDK, and derives the recipient and
+the wording from the *stored* document — so a caller cannot use it to mail arbitrary
+text to arbitrary people. It then checks the relationship: only a HoD may announce an
+assignment, and a lecturer may only report progress on a task where
+`assignedTo == their own uid`.
+
+**Failures are soft on purpose.** By the time the email is attempted, the user's change
+is already saved in Firestore. A missing API key or a bounced address therefore returns
+`200` with `"sent": false` and is logged — never an error on a screen where the work in
+fact succeeded.
+
 ---
 
 # 10. In-app notifications
@@ -282,13 +313,15 @@ Nothing is stored for this. It's the same `isOverdue()` / `isDueSoon()` function
 
 ---
 
-# 11. Why two things go through a server
+# 11. Why some things go through a server
 
-Almost everything is a direct Firestore write. Two exceptions:
+Almost everything is a direct Firestore write. Three exceptions:
 
 **Creating an account** — `createUserWithEmailAndPassword()` in the browser signs the *current* user out and in as the new account. An admin creating a lecturer would lose their own session mid-click. So [/api/admin/users](smart_task/app/api/admin/users/route.ts) does it server-side with the Admin SDK — after verifying the caller's token and re-checking that they really are an admin.
 
 **The reminder job** — it has to read *every* lecturer's tasks, which no signed-in user is permitted to do.
+
+**The notification emails** — sending mail needs `RESEND_API_KEY`, and a key in the browser is a key anyone can read. See section 9.
 
 Both use the **service account** key in `.env.local`. That key bypasses the security rules entirely, which is exactly why it must never reach the browser.
 
@@ -310,3 +343,5 @@ Both use the **service account** key in `.env.local`. That key bypasses the secu
 | "Why not Cloud Functions for reminders?" | Spark plan doesn't allow scheduling. External cron + protected route achieves the same on free tier. |
 | "How often do reminders run?" | Once daily at 06:00 — Vercel's free plan allows one cron run per day. No task is missed, but notice varies from 0 to 24 hours. Hourly needs only a schedule change. |
 | "How do you know the rules work?" | 33 automated tests against the emulator — `npm run test:rules`. |
+| "How does a lecturer know they were given a task?" | An email goes out the moment it is assigned, via `/api/notify/task` — the write itself cannot trigger one, because Spark has no Cloud Functions. |
+| "Could someone abuse that route to send emails?" | It accepts only a task id, re-reads the task server-side, and checks the caller really is the HoD or the assigned lecturer. |

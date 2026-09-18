@@ -9,6 +9,7 @@ import { TaskForm, type TaskFormValues } from "@/components/task-form";
 import { PageHeader } from "@/components/ui";
 import { db } from "@/lib/firebase/client";
 import { authErrorMessage } from "@/lib/auth-errors";
+import { notifyTask } from "@/lib/notify";
 
 export default function NewTaskPage() {
   return (
@@ -25,7 +26,7 @@ function NewTask() {
   async function createTask(values: TaskFormValues) {
     if (!profile) return;
     try {
-      await addDoc(collection(db, "tasks"), {
+      const created = await addDoc(collection(db, "tasks"), {
         title: values.title,
         description: values.description,
         assignedTo: values.assignedTo,
@@ -43,6 +44,9 @@ function NewTask() {
         completedAt: null,
         lastReminderSentAt: null,
       });
+      // The lecturer hears about it immediately; the cron job only handles
+      // deadline reminders later on.
+      await notifyTask(created.id, "assigned");
       router.push("/tasks");
     } catch (err) {
       throw new Error(authErrorMessage(err, "Could not create the task."));
@@ -53,7 +57,7 @@ function NewTask() {
     <>
       <PageHeader
         title="Assign a new task"
-        description="The lecturer sees it immediately and is reminded by email before the deadline."
+        description="The lecturer is emailed straight away, and reminded again before the deadline."
       />
       <TaskForm
         submitLabel="Assign task"

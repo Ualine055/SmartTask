@@ -19,6 +19,7 @@ import {
 import { db } from "@/lib/firebase/client";
 import { useTask } from "@/lib/hooks/use-tasks";
 import { authErrorMessage } from "@/lib/auth-errors";
+import { notifyTask } from "@/lib/notify";
 import { displayStatus, formatDateTime, relativeToNow, toDate } from "@/lib/tasks";
 
 export default function TaskDetailPage() {
@@ -69,6 +70,10 @@ function TaskDetail() {
         deadline: Timestamp.fromDate(values.deadline),
         updatedAt: serverTimestamp(),
       });
+      // Only worth an email when the work changed hands.
+      if (values.assignedTo !== task.assignedTo) {
+        await notifyTask(task.id, "assigned");
+      }
       setEditing(false);
     } catch (err) {
       throw new Error(authErrorMessage(err, "Could not save your changes."));

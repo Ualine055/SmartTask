@@ -240,6 +240,27 @@ constraint rather than fetching everything and hiding rows.
 
 ## Email reminders
 
+SmartTask sends three kinds of email:
+
+| When | Who gets it |
+| --- | --- |
+| A HoD assigns or reassigns a task | the lecturer, straight away |
+| A lecturer starts, completes or declines a task | the HoD who assigned it |
+| A deadline falls within 24 hours, or has passed | the lecturer, from the cron job below |
+
+The first two go through `/api/notify/task`, which the page calls right after its
+Firestore write. A server route is needed because the browser must never hold
+`RESEND_API_KEY`, and because a direct browser-to-Firestore write cannot trigger
+anything server-side on the Spark plan. The route accepts only a task id, re-reads the
+task with the Admin SDK and checks the caller is either the HoD or the assigned
+lecturer, so it cannot be used to mail arbitrary people. If the mail cannot be sent it
+responds `{"sent": false, "reason": ...}` with status `200` — the task change itself has
+already been saved, so it is not treated as an error.
+
+The deadline reminders are different: nobody is present when a deadline approaches, so
+they need a schedule.
+
+
 A reminder is sent when all three of these hold:
 
 1. the deadline is within the next 24 hours, or has already passed;
@@ -387,7 +408,8 @@ smart_task/
 │   ├── my-tasks/                   lecturer: grouped list and detail
 │   └── api/
 │       ├── admin/users/route.ts    admin-only account creation (Admin SDK)
-│       └── cron/reminders/route.ts the reminder job
+│       ├── cron/reminders/route.ts the deadline reminder job
+│       └── notify/task/route.ts    assignment / progress emails
 ├── components/
 │   ├── auth-provider.tsx           auth + live profile subscription
 │   ├── protected.tsx               role gate for a page
@@ -401,6 +423,7 @@ smart_task/
 │   ├── api-auth.ts                 ID-token verification for API routes
 │   ├── tasks.ts                    derived overdue / due-soon / counts
 │   ├── email.ts                    Resend client and templates
+│   ├── notify.ts                   browser helper for /api/notify/task
 │   ├── types.ts                    roles, statuses, document shapes
 │   └── hooks/                      live Firestore subscriptions
 ├── tests/rules.test.mjs            33 security-rules tests

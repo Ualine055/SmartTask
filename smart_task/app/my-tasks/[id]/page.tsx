@@ -20,6 +20,7 @@ import {
 import { db } from "@/lib/firebase/client";
 import { useTask } from "@/lib/hooks/use-tasks";
 import { authErrorMessage } from "@/lib/auth-errors";
+import { notifyTask } from "@/lib/notify";
 import { displayStatus, formatDateTime, isOverdue, relativeToNow } from "@/lib/tasks";
 import type { Status, Task } from "@/lib/types";
 
@@ -149,6 +150,8 @@ function UpdatePanel({ task }: { task: Task }) {
             : {}),
       });
       setNotice(successMessage);
+      // Let the Head of Department know what changed.
+      await notifyTask(task.id, "progress");
     } catch (err) {
       setError(authErrorMessage(err, "Could not update the task."));
     } finally {

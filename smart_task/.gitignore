@@ -43,3 +43,6 @@ next-env.d.ts
 # keep the template, ignore real secrets
 !.env.local.example
 serviceAccountKey.json
+
+# emulator debug log - regenerated on every run
+firestore-debug.log

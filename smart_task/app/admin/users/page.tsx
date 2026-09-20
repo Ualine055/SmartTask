@@ -22,7 +22,7 @@ import { auth, db } from "@/lib/firebase/client";
 import { useUsers } from "@/lib/hooks/use-users";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { formatDateTime } from "@/lib/tasks";
-import { ROLES, ROLE_LABELS, type AppUser, type Role } from "@/lib/types";
+import { DEPARTMENTS, ROLES, ROLE_LABELS, type AppUser, type Role } from "@/lib/types";
 
 export default function AdminUsersPage() {
   return (
@@ -274,7 +274,7 @@ function ActiveDot({ isActive }: { isActive: boolean }) {
 function CreateUserForm({ onCreated }: { onCreated: (name: string) => void }) {
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [department, setDepartment] = useState("");
+  const [department, setDepartment] = useState<string>(DEPARTMENTS[0]);
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<Role>("lecturer");
   const [error, setError] = useState<string | null>(null);
@@ -333,12 +333,17 @@ function CreateUserForm({ onCreated }: { onCreated: (name: string) => void }) {
             />
           </Field>
           <Field label="Department" htmlFor="new-dept">
-            <Input
+            <Select
               id="new-dept"
               value={department}
               onChange={(e) => setDepartment(e.target.value)}
-              placeholder="Information Technology"
-            />
+            >
+              {DEPARTMENTS.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </Select>
           </Field>
           <Field label="Role" htmlFor="new-role">
             <Select

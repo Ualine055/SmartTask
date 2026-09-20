@@ -59,7 +59,7 @@ function userDoc(uid, role, isActive = true) {
     fullName: `User ${uid}`,
     email: `${uid}@uok.ac.rw`,
     role,
-    department: "Information Technology",
+    department: "Computer Science",
     isActive,
     createdAt: new Date(),
   };

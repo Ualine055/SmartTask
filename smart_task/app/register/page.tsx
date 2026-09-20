@@ -12,15 +12,7 @@ import { ConfigNotice } from "@/components/protected";
 import { Alert, Button, Field, Input } from "@/components/ui";
 import { auth, db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { authErrorMessage } from "@/lib/auth-errors";
-import { HOME_FOR_ROLE } from "@/lib/types";
-
-const DEPARTMENTS = [
-  "Computer Science",
-  "Information Technology",
-  "Information Systems",
-  "Software Engineering",
-  "Networking and Communication Systems",
-];
+import { DEPARTMENTS, HOME_FOR_ROLE } from "@/lib/types";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -28,7 +20,7 @@ export default function RegisterPage() {
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
-  const [department, setDepartment] = useState(DEPARTMENTS[0]);
+  const [department, setDepartment] = useState<string>(DEPARTMENTS[0]);
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);

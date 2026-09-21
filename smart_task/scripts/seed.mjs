@@ -47,13 +47,20 @@ if (usingEmulator) console.log("Seeding the local emulators.");
 const auth = getAuth();
 const db = getFirestore();
 
+/**
+ * Resend only delivers to the address that owns the account until a domain is
+ * verified, so one demo lecturer can borrow a real inbox. Set
+ * DEMO_LECTURER_EMAIL in .env.local to see an assignment email arrive live.
+ */
+const LECTURER1_EMAIL = process.env.DEMO_LECTURER_EMAIL || "lecturer1@uok.ac.rw";
+
 const PEOPLE = [
   { key: "admin", fullName: "Alice Uwase", email: "admin@uok.ac.rw", role: "admin" },
   { key: "hod", fullName: "Dr. Eric Mugisha", email: "hod@uok.ac.rw", role: "hod" },
   {
     key: "lecturer1",
     fullName: "Jean Bosco Habimana",
-    email: "lecturer1@uok.ac.rw",
+    email: LECTURER1_EMAIL,
     role: "lecturer",
   },
   {
@@ -249,7 +256,7 @@ Done. Sign in at http://localhost:3000/login
 
   Administrator      admin@uok.ac.rw
   Head of Department hod@uok.ac.rw
-  Lecturers          lecturer1@uok.ac.rw, lecturer2@uok.ac.rw, lecturer3@uok.ac.rw
+  Lecturers          ${LECTURER1_EMAIL}, lecturer2@uok.ac.rw, lecturer3@uok.ac.rw
 
   Password for all:  ${PASSWORD}
 

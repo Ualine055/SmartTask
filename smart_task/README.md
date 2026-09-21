@@ -173,6 +173,7 @@ bypassing the rules. Never expose them to the browser and never commit them.
 | `REMINDER_FROM_EMAIL` | A verified sender, e.g. `SmartTask <noreply@yourdomain>` |
 | `CRON_SECRET`         | Any long random string — protects the reminder route     |
 | `NEXT_PUBLIC_APP_URL` | Used for the link inside reminder emails                 |
+| `DEMO_LECTURER_EMAIL` | Optional. A real inbox for lecturer1 when seeding         |
 
 Generate a secret with:
 
@@ -268,6 +269,42 @@ A reminder is sent when all three of these hold:
 3. no reminder has gone out for that task in the last 24 hours.
 
 Point 3 is what makes re-running the job harmless.
+
+### Why only one address receives email
+
+A new Resend account is in **testing mode** until a domain is verified. In that
+mode Resend delivers to exactly one recipient — the address the account was
+registered with — and rejects every other recipient with HTTP 403:
+
+```
+You can only send testing emails to your own email address (you@example.com).
+To send emails to other recipients, please verify a domain at resend.com/domains,
+and change the `from` address to an email using this domain.
+```
+
+This is a provider restriction, not a fault in the app: `sendEmail()` builds and
+posts every message identically, and Resend filters by recipient afterwards. So
+assigning a task to the account owner's address delivers, while assigning the
+same task to `lecturer2@uok.ac.rw` does not.
+
+The rejection is not silent. `/api/notify/task` returns
+`{"sent": false, "reason": ...}`, and `lib/notify.ts` writes it to the browser
+console — open DevTools while assigning a task to read the exact 403.
+
+Two things that look like workarounds but are not:
+
+- **Plus-addressing** (`you+lecturer1@gmail.com`) is rejected. The check is an
+  exact string match on the account address.
+- **A free `*.vercel.app` or `*.web.app` subdomain** cannot be verified, because
+  verification means adding DNS records to a domain you control.
+
+To lift the restriction, verify a domain at <https://resend.com/domains>, add the
+DNS records it gives you, then point `REMINDER_FROM_EMAIL` at an address on that
+domain. Any recipient works from then on.
+
+Until then, set `DEMO_LECTURER_EMAIL` to the Resend account address before
+seeding. Lecturer1 is then a real inbox, so an assignment email can be shown
+arriving live while the other accounts illustrate the limit.
 
 ### Why an API route instead of a Cloud Function
 
@@ -512,6 +549,12 @@ again, or create the document by hand.
 **A new user cannot see anything / "Account deactivated"**
 Check `isActive` on their user document. An admin can flip it on
 `/admin/users`.
+
+**Only one person receives task emails; everyone else gets nothing**
+Resend is in testing mode until a domain is verified, so it delivers only to the
+address the account was registered with and rejects the rest with a 403. Nothing
+is wrong with the app. See
+[Why only one address receives email](#why-only-one-address-receives-email).
 
 **`npm run test:rules` says "Could not spawn java"**
 The Firestore emulator needs Java. The message is misleading, though: it also

@@ -169,6 +169,8 @@ bypassing the rules. Never expose them to the browser and never commit them.
 
 | Variable              | Notes                                                    |
 | --------------------- | -------------------------------------------------------- |
+| `GMAIL_USER`          | A Gmail address — enables SMTP, delivers to anyone        |
+| `GMAIL_APP_PASSWORD`  | 16-character app password (needs 2-Step Verification)     |
 | `RESEND_API_KEY`      | From <https://resend.com> (free tier)                    |
 | `REMINDER_FROM_EMAIL` | A verified sender, e.g. `SmartTask <noreply@yourdomain>` |
 | `CRON_SECRET`         | Any long random string — protects the reminder route     |
@@ -302,9 +304,55 @@ To lift the restriction, verify a domain at <https://resend.com/domains>, add th
 DNS records it gives you, then point `REMINDER_FROM_EMAIL` at an address on that
 domain. Any recipient works from then on.
 
+The alternative is to send through Gmail instead, which has no such restriction -
+see [Sending to everyone: Gmail over SMTP](#sending-to-everyone-gmail-over-smtp).
+
 Until then, set `DEMO_LECTURER_EMAIL` to the Resend account address before
 seeding. Lecturer1 is then a real inbox, so an assignment email can be shown
 arriving live while the other accounts illustrate the limit.
+
+### Sending to everyone: Gmail over SMTP
+
+Verifying a domain is the only way to lift Resend's restriction, which needs a
+domain to own. Gmail needs neither. Authenticating as the mailbox owner is not
+sending *on behalf of* a domain, so Google does not gate the recipient list —
+the same reason pressing Send in Gmail reaches anyone.
+
+`sendEmail()` prefers Gmail whenever `GMAIL_APP_PASSWORD` is set, and falls back
+to Resend otherwise. Nothing else in the app changes: both API routes, all three
+templates and the 24-hour reminder guard are untouched.
+
+To switch on Gmail:
+
+1. Turn on 2-Step Verification at <https://myaccount.google.com/security>. App
+   passwords do not exist without it.
+2. Create one at <https://myaccount.google.com/apppasswords> — 16 characters,
+   shown once, revocable on its own without changing the account password.
+3. Put both in `.env.local`:
+
+   ```
+   GMAIL_USER=you@gmail.com
+   GMAIL_APP_PASSWORD=abcdefghijklmnop
+   ```
+
+4. Prove it before relying on it, using an address that is *not* your own:
+
+   ```bash
+   npm run check:email someone.else@example.com
+   ```
+
+Known trade-offs:
+
+- Mail arrives from the personal Gmail address. Gmail rewrites `From` to the
+  authenticated mailbox, so `REMINDER_FROM_EMAIL` is ignored on this path and
+  only the display name is ours to set.
+- A free Gmail account allows roughly 500 recipients per day.
+- `535-5.7.8` means the credentials were refused — usually the Gmail password
+  was used instead of the app password, or 2-Step Verification is off.
+- SMTP is reliable locally, but on serverless hosts it is not: once a function
+  returns, Vercel freezes work that was not awaited, and a half-open SMTP
+  connection can be dropped. A deployment is the case for a verified domain on
+  Resend, which is why both providers are kept.
 
 ### Why an API route instead of a Cloud Function
 

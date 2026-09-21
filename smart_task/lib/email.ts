@@ -1,10 +1,19 @@
 /**
- * Minimal Resend client.
+ * The one place an email actually leaves the app. Everything above it builds
+ * templates, so swapping providers means changing this file only.
  *
- * Called with fetch rather than the `resend` npm package on purpose: it is one
- * HTTP POST, and keeping the dependency list short makes the project easier to
- * install and mark. Swapping in another provider means changing this file only.
+ * Two are supported, and Gmail wins when it is configured:
+ *
+ *   Gmail over SMTP - authenticates as the mailbox owner with an app password,
+ *     so it delivers to ANY recipient. Needs the `nodemailer` client.
+ *   Resend - one HTTP POST, no dependency, but until a domain is verified its
+ *     shared sender only delivers to the address that owns the account.
+ *
+ * The demo therefore runs on Gmail; Resend is what a deployment with a real
+ * domain would use. See "Why only one address receives email" in README.md.
  */
+
+import nodemailer from "nodemailer";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
@@ -15,13 +24,31 @@ export interface EmailMessage {
   text: string;
 }
 
+/** Gmail credentials, or null when the app password is not set. */
+function gmail(): { user: string; pass: string } | null {
+  const user = process.env.GMAIL_USER;
+  // Google prints the app password in four groups; the spaces are decorative.
+  const pass = process.env.GMAIL_APP_PASSWORD?.replace(/\s/g, "");
+  return user && pass ? { user, pass } : null;
+}
+
 export function isEmailConfigured(): boolean {
-  return Boolean(process.env.RESEND_API_KEY);
+  return Boolean(gmail() || process.env.RESEND_API_KEY);
 }
 
 export async function sendEmail(message: EmailMessage): Promise<void> {
+  const account = gmail();
+  if (account) {
+    // Gmail rewrites From to the authenticated mailbox, so only the display
+    // name is ours to choose - REMINDER_FROM_EMAIL is ignored on this path.
+    await nodemailer
+      .createTransport({ service: "gmail", auth: account })
+      .sendMail({ from: `SmartTask <${account.user}>`, ...message });
+    return;
+  }
+
   const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) throw new Error("RESEND_API_KEY is not set.");
+  if (!apiKey) throw new Error("Neither GMAIL_APP_PASSWORD nor RESEND_API_KEY is set.");
 
   const from = process.env.REMINDER_FROM_EMAIL || "SmartTask <onboarding@resend.dev>";
 

@@ -68,7 +68,7 @@ async function handle(request: NextRequest) {
 
   if (!isEmailConfigured() && !dryRun) {
     return Response.json(
-      { error: "RESEND_API_KEY is not set, so no email can be sent." },
+      { error: "No email provider is configured, so no email can be sent." },
       { status: 500 },
     );
   }

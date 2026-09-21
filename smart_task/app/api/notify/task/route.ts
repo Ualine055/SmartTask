@@ -15,7 +15,7 @@ import { PRIORITY_LABELS, STATUS_LABELS, type Priority, type Status } from "@/li
  * Why a server route at all: task writes go straight from the browser to
  * Firestore, and the Spark plan has no Cloud Functions, so nothing server-side
  * ever notices them. The browser cannot send the mail itself either, because
- * that would mean shipping RESEND_API_KEY to the client.
+ * that would mean shipping the mail credentials to the client.
  *
  * Only a task id is accepted. The recipient and every word of the email come
  * from the stored document, read here with the Admin SDK - so this route cannot
@@ -81,7 +81,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ sent: false, reason: "No email address for the recipient." });
     }
     if (!mail.isEmailConfigured()) {
-      console.warn("[notify/task] RESEND_API_KEY is not set - no email sent.");
+      console.warn("[notify/task] No email provider is configured - nothing sent.");
       return Response.json({ sent: false, reason: "Email is not configured." });
     }
 

@@ -333,6 +333,41 @@ Both use the **service account** key in `.env.local`. That key bypasses the secu
 
 ---
 
+# 13. Showing the emails live
+
+The seeded `@uok.ac.rw` addresses are fictional, so nothing reaches a human
+inbox. To show real email arriving, register an account on an inbox you can open
+in front of the room. Nothing needs reseeding.
+
+**1. Create a lecturer on a real inbox.** Go to `/register` and sign up with that
+address. Registration always creates a *lecturer* — the role is hardcoded and
+`firestore.rules` rejects any other value on create, so an account cannot grant
+itself privileges.
+
+**2. Assign a task to it.** Sign in as the HoD (`hod@uok.ac.rw`), open
+`/tasks/new`, assign to that lecturer, and set the deadline **within the next 24
+hours** so the same task can demonstrate the reminder afterwards. Saving sends
+the assignment email.
+
+**3. Fire the deadline reminder** without waiting for 06:00:
+
+```bash
+# what would be sent, sending nothing and marking nothing:
+curl "http://localhost:3000/api/cron/reminders?secret=YOUR_CRON_SECRET&dryRun=1"
+
+# for real:
+curl "http://localhost:3000/api/cron/reminders?secret=YOUR_CRON_SECRET"
+```
+
+**Rehearsing costs you the live run.** A task carries `lastReminderSentAt`, and
+no second reminder goes out within 24 hours of the first — the guard that makes
+re-running the job harmless. Practise with `dryRun=1`, or clear that field on the
+task before the real demonstration, otherwise the live run reports the task as
+skipped and sends nothing.
+
+If a reply is needed too, the lecturer reporting progress emails the HoD, so
+signing in as the lecturer and updating the task shows the second direction.
+
 ## Questions you should expect
 
 | Question | Short answer |
@@ -345,3 +380,4 @@ Both use the **service account** key in `.env.local`. That key bypasses the secu
 | "How do you know the rules work?" | 33 automated tests against the emulator — `npm run test:rules`. |
 | "How does a lecturer know they were given a task?" | An email goes out the moment it is assigned, via `/api/notify/task` — the write itself cannot trigger one, because Spark has no Cloud Functions. |
 | "Could someone abuse that route to send emails?" | It accepts only a task id, re-reads the task server-side, and checks the caller really is the HoD or the assigned lecturer. |
+

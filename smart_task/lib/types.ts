@@ -4,8 +4,9 @@ export const ROLES = ["admin", "hod", "lecturer"] as const;
 export type Role = (typeof ROLES)[number];
 
 /**
- * The three departments in the School. Registration and the admin form both
- * read this list, so adding a fourth is a one-line change here.
+ * The three programmes in the Department of Computing and IT, which is the
+ * department this system serves. Registration and the admin form both read
+ * this list, so adding a fourth is a one-line change here.
  */
 export const DEPARTMENTS = ["Computer Science", "BIT", "BBIT"] as const;
 

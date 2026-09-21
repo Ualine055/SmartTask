@@ -69,6 +69,11 @@ fullName, email, role, department, isActive, createdAt
 
 `role` is one of `admin` | `hod` | `lecturer`. `isActive: false` locks someone out without deleting their history.
 
+`department` is one of the School's three — **Computer Science**, **BIT**, **BBIT**. The
+list lives once, in `DEPARTMENTS` in [lib/types.ts](smart_task/lib/types.ts), and both the
+registration page and the admin form read it, so the two can never disagree and a typo
+cannot invent a fourth.
+
 ### `tasks/{taskId}`
 
 ```
@@ -227,7 +232,7 @@ Cron service (Vercel Cron / cron-job.org)
         ├─ skip any reminded in the last 24h
         │
         ├─ look up the lecturer's email
-        ├─ send via Resend
+        ├─ send the email (Gmail, or Resend)
         └─ stamp lastReminderSentAt
 ```
 
@@ -257,21 +262,42 @@ Be precise about the consequence, because it is a fair question:
 On a paid plan the same route on an hourly schedule would tighten the notice to within an
 hour, with no code change. The 24-hour guard already makes that safe.
 
-### The email provider
+### The email provider — and a decision worth explaining
 
-Sending goes through **Resend**, called with a plain `fetch` POST in
-[lib/email.ts](smart_task/lib/email.ts) rather than the npm package — one HTTP request, one
-fewer dependency, and swapping provider means editing that file alone.
+`sendEmail()` in [lib/email.ts](smart_task/lib/email.ts) is the single point where mail
+leaves the app. It supports two providers and prefers **Gmail over SMTP** whenever
+`GMAIL_APP_PASSWORD` is set, falling back to **Resend** otherwise.
 
-Two things to know before a live demo:
+That split exists because of a real problem, and it is a good story to tell:
 
-- **`RESEND_API_KEY` must be set** in `.env.local`. Without it the route refuses the run
-  with a `500` rather than failing silently.
-- **The sender address decides who can receive.** With the shared
-  `onboarding@resend.dev` sender and no verified domain, Resend only delivers to the
-  address the account was registered with. The seeded lecturer addresses
-  (`lecturer1@uok.ac.rw` and similar) are fictional, so for a demo that actually shows an
-  email arriving, point one account at a real inbox you control.
+**What went wrong.** Resend was the original choice — one HTTP POST, no dependency. But
+a Resend account stays in *testing mode* until you verify a domain, and in that mode it
+delivers to exactly one recipient: the address the account was registered with. Every
+other lecturer was refused with a `403` before the message ever left Resend. Nothing was
+wrong with the code — the provider was filtering.
+
+**Why a domain was not the answer.** Verifying one means adding DNS records to a domain
+you own. A free `*.vercel.app` subdomain cannot be verified, because you do not control
+its DNS.
+
+**Why Gmail lifts the restriction.** Authenticating to `smtp.gmail.com` with an app
+password is signing in *as the mailbox owner* — not asking to send on behalf of a domain.
+Google therefore does not gate the recipient list, exactly as it does not when you press
+Send in Gmail. Any address receives.
+
+**Why both were kept.** SMTP is reliable locally but not on serverless: once a function
+returns, the host can freeze work that was not awaited, and a half-open SMTP connection
+is dropped. So Gmail serves the demonstration and Resend remains the answer for a real
+deployment, where a verified domain would be the correct choice.
+
+**The point to make.** Swapping providers changed *one function*. Both API routes, all
+three templates and the 24-hour guard were untouched — which is what isolating the
+provider behind `sendEmail()` was for in the first place.
+
+Before a live demo: the seeded lecturer addresses (`lecturer1@uok.ac.rw` and similar) are
+fictional mailboxes, so set `DEMO_LECTURER_EMAILS` to real inboxes, or register an account
+on one. See section 13. `npm run check:email <address>` proves the setup independently and
+reports which provider is active.
 
 ### The three emails the system sends
 
@@ -287,8 +313,8 @@ through [/api/notify/task](smart_task/app/api/notify/task/route.ts):
 **Why these need a server route.** Assigning a task is a direct browser-to-Firestore
 write, so nothing server-side ever notices it — and with no Cloud Functions on the
 Spark plan, there is no database trigger to hang an email on. The browser cannot send
-the mail itself either, because that would mean shipping `RESEND_API_KEY` to the
-client, where anyone could read it. So the page writes to Firestore and then asks this
+the mail itself either, because that would mean shipping the mail credentials to the
+client, where anyone could read them. So the page writes to Firestore and then asks this
 route to do the emailing.
 
 **What stops it being abused.** The route takes nothing but a task id. It verifies the
@@ -321,7 +347,7 @@ Almost everything is a direct Firestore write. Three exceptions:
 
 **The reminder job** — it has to read *every* lecturer's tasks, which no signed-in user is permitted to do.
 
-**The notification emails** — sending mail needs `RESEND_API_KEY`, and a key in the browser is a key anyone can read. See section 9.
+**The notification emails** — sending mail needs credentials, and a credential in the browser is one anyone can read. See section 9.
 
 Both use the **service account** key in `.env.local`. That key bypasses the security rules entirely, which is exactly why it must never reach the browser.
 
@@ -380,4 +406,8 @@ signing in as the lecturer and updating the task shows the second direction.
 | "How do you know the rules work?" | 33 automated tests against the emulator — `npm run test:rules`. |
 | "How does a lecturer know they were given a task?" | An email goes out the moment it is assigned, via `/api/notify/task` — the write itself cannot trigger one, because Spark has no Cloud Functions. |
 | "Could someone abuse that route to send emails?" | It accepts only a task id, re-reads the task server-side, and checks the caller really is the HoD or the assigned lecturer. |
+| "Why send through Gmail rather than an email service?" | The service's free tier only delivers to the account owner until a domain is verified, and I own no domain. Authenticating to Gmail as the mailbox owner is not sending on behalf of a domain, so any recipient works. |
+| "Isn't a personal Gmail unprofessional for production?" | Yes — which is why the service client was kept. Production means a verified domain, and that is a config change, not a code change. SMTP is also unreliable on serverless, so a deployment should use it. |
+| "How hard was it to change email provider?" | One function. `sendEmail()` is the only place mail leaves the app, so both routes, all three templates and the 24-hour guard were untouched. |
+| "How do you keep credentials out of the repository?" | Everything secret lives in `.env.local`, which `.gitignore` excludes; `.env.local.example` documents the names with empty values. |
 

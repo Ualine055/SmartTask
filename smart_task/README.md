@@ -468,11 +468,38 @@ before pointing the app back at the real project.
 1. Push the repository to GitHub.
 2. On <https://vercel.com>, **Add New → Project**, import the repository, and
    set the **Root Directory** to `smart_task`.
-3. Add every variable from `.env.local` under **Settings → Environment
-   Variables**. For `FIREBASE_PRIVATE_KEY`, paste the value complete with its
-   `\n` escapes.
+3. Add these under **Settings → Environment Variables**. `DEMO_LECTURER_EMAILS`
+   and the emulator variables are not among them — only the seed script and
+   local runs read those.
+
+   | Variable | Value |
+   | --- | --- |
+   | `NEXT_PUBLIC_FIREBASE_API_KEY` | same as local |
+   | `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | same as local |
+   | `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | same as local |
+   | `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | same as local |
+   | `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | same as local |
+   | `NEXT_PUBLIC_FIREBASE_APP_ID` | same as local |
+   | `FIREBASE_PROJECT_ID` | same as local |
+   | `FIREBASE_CLIENT_EMAIL` | same as local |
+   | `FIREBASE_PRIVATE_KEY` | see the warning below |
+   | `GMAIL_USER` | same as local |
+   | `GMAIL_APP_PASSWORD` | same as local |
+   | `RESEND_API_KEY` | same as local |
+   | `REMINDER_FROM_EMAIL` | same as local, without the surrounding quotes |
+   | `CRON_SECRET` | same as local |
+   | `NEXT_PUBLIC_APP_URL` | **the deployed URL**, not localhost |
+
+   **`FIREBASE_PRIVATE_KEY` is where deployments usually fail.** Paste it
+   *without* the surrounding double quotes, keeping the literal `\n` sequences
+   exactly as they appear — `lib/firebase/admin.ts` turns them back into real
+   newlines. Pasting the quotes, or real line breaks, gives
+   `error:1E08010C:DECODER routines::unsupported` at runtime.
+
 4. Set `NEXT_PUBLIC_APP_URL` to the deployed URL, e.g.
-   `https://smarttask.vercel.app`.
+   `https://smarttask.vercel.app`, or every link inside an email points at
+   localhost. Anything prefixed `NEXT_PUBLIC_` is baked in at build time, so
+   changing one later needs a redeploy, not just a save.
 5. Deploy. `vercel.json` registers the reminder cron automatically.
 6. In the Firebase console, add your Vercel domain under **Authentication →
    Settings → Authorized domains**.

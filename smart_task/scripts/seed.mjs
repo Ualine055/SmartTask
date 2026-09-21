@@ -48,11 +48,17 @@ const auth = getAuth();
 const db = getFirestore();
 
 /**
- * Resend only delivers to the address that owns the account until a domain is
- * verified, so one demo lecturer can borrow a real inbox. Set
- * DEMO_LECTURER_EMAIL in .env.local to see an assignment email arrive live.
+ * The @uok.ac.rw addresses below are fictional, so nothing reaches a human
+ * inbox during a demonstration. DEMO_LECTURER_EMAILS in .env.local is a comma
+ * separated list of real inboxes, applied to lecturer1, lecturer2 and
+ * lecturer3 in order; any left over keep their fictional address.
  */
-const LECTURER1_EMAIL = process.env.DEMO_LECTURER_EMAIL || "lecturer1@uok.ac.rw";
+const DEMO_EMAILS = (process.env.DEMO_LECTURER_EMAILS ?? "")
+  .split(",")
+  .map((address) => address.trim())
+  .filter(Boolean);
+
+const lecturerEmail = (index, fallback) => DEMO_EMAILS[index] || fallback;
 
 const PEOPLE = [
   { key: "admin", fullName: "Alice Uwase", email: "admin@uok.ac.rw", role: "admin" },
@@ -60,19 +66,19 @@ const PEOPLE = [
   {
     key: "lecturer1",
     fullName: "Jean Bosco Habimana",
-    email: LECTURER1_EMAIL,
+    email: lecturerEmail(0, "lecturer1@uok.ac.rw"),
     role: "lecturer",
   },
   {
     key: "lecturer2",
     fullName: "Claudine Mukamana",
-    email: "lecturer2@uok.ac.rw",
+    email: lecturerEmail(1, "lecturer2@uok.ac.rw"),
     role: "lecturer",
   },
   {
     key: "lecturer3",
     fullName: "Patrick Nshimiyimana",
-    email: "lecturer3@uok.ac.rw",
+    email: lecturerEmail(2, "lecturer3@uok.ac.rw"),
     role: "lecturer",
   },
 ];
@@ -256,7 +262,7 @@ Done. Sign in at http://localhost:3000/login
 
   Administrator      admin@uok.ac.rw
   Head of Department hod@uok.ac.rw
-  Lecturers          ${LECTURER1_EMAIL}, lecturer2@uok.ac.rw, lecturer3@uok.ac.rw
+  Lecturers          ${PEOPLE.filter((p) => p.role === "lecturer").map((p) => p.email).join(", ")}
 
   Password for all:  ${PASSWORD}
 

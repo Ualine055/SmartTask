@@ -175,7 +175,7 @@ bypassing the rules. Never expose them to the browser and never commit them.
 | `REMINDER_FROM_EMAIL` | A verified sender, e.g. `SmartTask <noreply@yourdomain>` |
 | `CRON_SECRET`         | Any long random string — protects the reminder route     |
 | `NEXT_PUBLIC_APP_URL` | Used for the link inside reminder emails                 |
-| `DEMO_LECTURER_EMAIL` | Optional. A real inbox for lecturer1 when seeding         |
+| `DEMO_LECTURER_EMAILS`| Optional. Comma separated real inboxes for the demo lecturers |
 
 Generate a secret with:
 
@@ -307,9 +307,9 @@ domain. Any recipient works from then on.
 The alternative is to send through Gmail instead, which has no such restriction -
 see [Sending to everyone: Gmail over SMTP](#sending-to-everyone-gmail-over-smtp).
 
-Until then, set `DEMO_LECTURER_EMAIL` to the Resend account address before
-seeding. Lecturer1 is then a real inbox, so an assignment email can be shown
-arriving live while the other accounts illustrate the limit.
+Either way the seeded `@uok.ac.rw` lecturer addresses are fictional mailboxes,
+so set `DEMO_LECTURER_EMAILS` to real inboxes before seeding if an email has to
+be seen arriving during a demonstration.
 
 ### Sending to everyone: Gmail over SMTP
 

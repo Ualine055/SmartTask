@@ -15,7 +15,7 @@ import { FieldValue, getFirestore, Timestamp } from "firebase-admin/firestore";
 import { getAuth } from "firebase-admin/auth";
 
 const PASSWORD = "Password123!";
-const DEPARTMENT = "Computer Science";
+const DEPARTMENT = "Computing and IT";
 const SEED_TAG = "seed-demo"; // lets a re-run find and replace its own tasks
 
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;

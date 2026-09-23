@@ -4,10 +4,11 @@ export const ROLES = ["admin", "hod", "lecturer"] as const;
 export type Role = (typeof ROLES)[number];
 
 /**
- * The department this system serves. One entry today; registration and the
- * admin form both read this list, so adding another is a one-line change here.
+ * The department this system serves, plus a catch-all so someone outside it
+ * still has an honest answer. Registration and the admin form both read this
+ * list, so adding a department is a one-line change here.
  */
-export const DEPARTMENTS = ["Computing and IT"] as const;
+export const DEPARTMENTS = ["Computing and IT", "Other"] as const;
 
 export const PRIORITIES = ["low", "medium", "high"] as const;
 export type Priority = (typeof PRIORITIES)[number];

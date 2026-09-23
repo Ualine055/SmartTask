@@ -69,7 +69,8 @@ fullName, email, role, department, isActive, createdAt
 
 `role` is one of `admin` | `hod` | `lecturer`. `isActive: false` locks someone out without deleting their history.
 
-`department` is **Computing and IT** — the department this system serves. The list lives
+`department` is **Computing and IT** — the department this system serves — or **Other**,
+so anyone outside it still has an honest answer rather than a wrong one. The list lives
 once, in `DEPARTMENTS` in [lib/types.ts](smart_task/lib/types.ts), and both the
 registration page and the admin form read it, so the two can never disagree and a typo
 cannot invent another.

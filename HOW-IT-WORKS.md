@@ -244,6 +244,64 @@ Two details worth pointing out:
 
 There's also `?dryRun=1`, which shows exactly which tasks qualify without sending anything — useful for demonstrating it live without spamming anyone.
 
+### Following one reminder through the code
+
+Nothing is clicked here. The difference from the assignment email is the whole
+point: an assignment happens because somebody acted, a deadline happens because
+time passed, and nothing in the browser is watching the clock.
+
+All of it is `app/api/cron/reminders/route.ts`.
+
+**1. Something outside calls the route.** Vercel Cron at 06:00, or `curl`
+during a demonstration. Nobody is signed in, so there is no user to check —
+a shared secret stands in for one, line 50:
+
+```ts
+if (header === `Bearer ${secret}`) return true;
+if (request.nextUrl.searchParams.get("secret") === secret) return true;
+```
+
+Three ways to present it, because cron services differ in what they can send.
+Without it, anyone who found the URL could mail every lecturer.
+
+**2. Ask the database for anything close to its deadline**, line 85:
+
+```ts
+.collection("tasks").where("deadline", "<=", dueSoonCutoff).orderBy("deadline")
+```
+
+`dueSoonCutoff` is now + 24 hours, so this catches both what is due soon and
+what is already overdue. One range filter, which needs no composite index.
+
+**3. Narrow it down in memory**, line 92:
+
+```ts
+if (task.status !== "incoming" && task.status !== "ongoing") return false;
+if (last && last.toDate() > reminderCutoff) return false;
+```
+
+Finished and declined tasks drop out; so does anything already reminded within
+24 hours. That second line is what makes re-running the job harmless.
+
+**4. Find who to tell.** `task.assignedTo` gives a uid, and `users/{uid}.email`
+gives the address — the same lookup the assignment email does. Lecturers with
+several due tasks are looked up once and cached.
+
+**5. Send, then mark**, line 165:
+
+```ts
+await sendEmail({ to: recipient.email, subject: reminderSubject(context), … });
+await docSnap.ref.update({ lastReminderSentAt: FieldValue.serverTimestamp() });
+```
+
+**The order matters.** Stamping only after a successful send means a failure is
+retried on the next run rather than silently swallowed. Stamping first would
+lose the reminder for good.
+
+**What comes back** is a report: scanned, due, attempted, sent, skipped, with a
+reason for anything not sent. Add `&dryRun=1` and it reports without sending or
+marking — which is how to rehearse without consuming the live demonstration.
+
 ### Why daily, and what that costs
 
 `vercel.json` schedules `0 6 * * *` — **once a day at 06:00**, not hourly. That is forced

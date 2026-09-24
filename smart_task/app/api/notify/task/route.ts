@@ -6,26 +6,6 @@ import { adminDb } from "@/lib/firebase/admin";
 import * as mail from "@/lib/email";
 import { PRIORITY_LABELS, STATUS_LABELS, type Priority, type Status } from "@/lib/types";
 
-/**
- * POST /api/notify/task   { taskId, event: 'assigned' | 'progress' }
- *
- * The "it just happened" emails: a HoD assigns a task -> tell the lecturer;
- * a lecturer reports progress -> tell the HoD who assigned it.
- *
- * Why a server route at all: task writes go straight from the browser to
- * Firestore, and the Spark plan has no Cloud Functions, so nothing server-side
- * ever notices them. The browser cannot send the mail itself either, because
- * that would mean shipping the mail credentials to the client.
- *
- * Only a task id is accepted. The recipient and every word of the email come
- * from the stored document, read here with the Admin SDK - so this route cannot
- * be used to mail arbitrary text to arbitrary people.
- *
- * Failure is soft: the task change is already saved by the time we get here, so
- * "could not send" returns 200 with sent:false rather than an error on a screen
- * where the user's work in fact succeeded.
- */
-
 export const dynamic = "force-dynamic";
 
 /** Stored status -> [colour tone, headline verb] for the email to the HoD. */

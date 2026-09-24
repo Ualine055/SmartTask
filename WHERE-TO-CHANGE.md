@@ -88,6 +88,47 @@ the entire application — buttons, links, the logo mark, badges, focus rings.
 One line, everything moves together. That is the answer to "can you change the
 colour scheme?"
 
+## Every button in the app, and where it lives
+
+Find the screen you are looking at, then the words on the button.
+
+| Screen (URL) | Button says | Colour | File and line |
+|---|---|---|---|
+| Any page, top right | Sign out | white | `components/app-shell.tsx` 85 **and** 141 |
+| `/login` | Sign in | blue | `app/login/page.tsx` 97 |
+| `/register` | Create account | blue | `app/register/page.tsx` 152 |
+| `/dashboard` | New task | blue | `app/dashboard/page.tsx` 108 |
+| `/tasks` | New task | blue | `app/tasks/page.tsx` 81 |
+| `/tasks` (when empty) | Assign a task | blue | `app/tasks/page.tsx` 144 |
+| `/tasks/new` | Save / Saving… | blue | `components/task-form.tsx` 189 |
+| `/tasks/new` | Cancel | white | `components/task-form.tsx` 193 |
+| `/tasks/[id]` | Back to all tasks | white | `app/tasks/[id]/page.tsx` 52 |
+| `/tasks/[id]` | Edit | white | `app/tasks/[id]/page.tsx` 130 |
+| `/tasks/[id]` | Delete | red | `app/tasks/[id]/page.tsx` 133 |
+| `/tasks/[id]` | Yes, delete it | red | `app/tasks/[id]/page.tsx` 151 |
+| `/tasks/[id]` | Cancel | white | `app/tasks/[id]/page.tsx` 154 |
+| `/my-tasks/[id]` | Back to my tasks | white | `app/my-tasks/[id]/page.tsx` 48 |
+| `/my-tasks/[id]` | Start working | blue | `app/my-tasks/[id]/page.tsx` 216 |
+| `/my-tasks/[id]` | Mark complete | blue | `app/my-tasks/[id]/page.tsx` 225 |
+| `/my-tasks/[id]` | Reopen task | white | `app/my-tasks/[id]/page.tsx` 232, 271 |
+| `/my-tasks/[id]` | Cannot complete | white | `app/my-tasks/[id]/page.tsx` 242 |
+| `/my-tasks/[id]` | Decline task | red | `app/my-tasks/[id]/page.tsx` 267 |
+| `/my-tasks/[id]` | Cancel | plain | `app/my-tasks/[id]/page.tsx` 279 |
+| `/admin/users` | Add user / Close | blue | `app/admin/users/page.tsx` 90 |
+| `/admin/users` | Activate / Deactivate | white or blue | `app/admin/users/page.tsx` 188 **and** 237 |
+| `/admin/users` | Create account | blue | `app/admin/users/page.tsx` 377 |
+
+**Three buttons appear twice, and changing one will not change the other:**
+
+- **Sign out** — line 85 is the wide-screen header, line 141 is the phone menu.
+- **Activate / Deactivate** — line 188 is the wide-screen table, line 237 is the
+  phone card list.
+- **New task** — the dashboard has its own at `dashboard/page.tsx` 108, separate
+  from the one on `/tasks`.
+
+If a change seems to have done nothing, check whether the screen is showing the
+other copy. Narrowing the browser window switches between them.
+
 ## Buttons — change the colour at the button
 
 Every button says its own colour, in plain words, where it is written:

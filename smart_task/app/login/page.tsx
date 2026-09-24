@@ -8,7 +8,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { AuthCard } from "@/components/auth-card";
 import { useAuth } from "@/components/auth-provider";
 import { ConfigNotice } from "@/components/protected";
-import { Alert, Button, Field, Input, Spinner } from "@/components/ui";
+import { Alert, Button, Field, Input, PasswordInput, Spinner } from "@/components/ui";
 import { auth, isFirebaseConfigured } from "@/lib/firebase/client";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { homeAfterSignIn } from "@/lib/types";
@@ -85,9 +85,8 @@ function LoginForm() {
         </Field>
 
         <Field label="Password" htmlFor="password">
-          <Input
+          <PasswordInput
             id="password"
-            type="password"
             autoComplete="current-password"
             required
             value={password}

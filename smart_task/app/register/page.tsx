@@ -9,7 +9,7 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { AuthCard } from "@/components/auth-card";
 import { useAuth } from "@/components/auth-provider";
 import { ConfigNotice } from "@/components/protected";
-import { Alert, Button, Field, Input } from "@/components/ui";
+import { Alert, Button, Field, Input, PasswordInput } from "@/components/ui";
 import { auth, db, isFirebaseConfigured } from "@/lib/firebase/client";
 import { authErrorMessage } from "@/lib/auth-errors";
 import { DEPARTMENTS, HOME_FOR_ROLE } from "@/lib/types";
@@ -130,9 +130,8 @@ export default function RegisterPage() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Password" htmlFor="password" hint="At least 6 characters">
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               required
               value={password}
@@ -140,9 +139,8 @@ export default function RegisterPage() {
             />
           </Field>
           <Field label="Confirm password" htmlFor="confirm">
-            <Input
+            <PasswordInput
               id="confirm"
-              type="password"
               autoComplete="new-password"
               required
               value={confirm}

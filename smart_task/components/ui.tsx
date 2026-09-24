@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import type {
   ButtonHTMLAttributes,
   InputHTMLAttributes,
@@ -59,6 +62,49 @@ export function Label({ className, ...props }: LabelHTMLAttributes<HTMLLabelElem
 
 export function Input({ className, ...props }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={cx(FIELD, className)} {...props} />;
+}
+
+/**
+ * A password box with a reveal toggle, so someone can check what they typed
+ * before submitting. Whether the text is visible is state rather than a prop,
+ * so every use starts hidden.
+ */
+export function PasswordInput({
+  className,
+  ...props
+}: Omit<InputHTMLAttributes<HTMLInputElement>, "type">) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <div className="relative">
+      <input
+        type={visible ? "text" : "password"}
+        className={cx(FIELD, "pr-11", className)}
+        {...props}
+      />
+      <button
+        type="button" // never submits the form it sits in
+        onClick={() => setVisible((shown) => !shown)}
+        aria-label={visible ? "Hide password" : "Show password"}
+        aria-pressed={visible}
+        className="absolute inset-y-0 right-0 flex items-center rounded-r-lg px-3 text-muted hover:text-ink"
+      >
+        <svg
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          className="size-4"
+          aria-hidden
+        >
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
+          {visible ? <path d="m3 3 18 18" /> : null}
+        </svg>
+      </button>
+    </div>
+  );
 }
 
 export function Textarea({

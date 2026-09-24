@@ -78,7 +78,7 @@ function AllTasks() {
         }`}
         action={
           <Link href="/tasks/new">
-            <Button>New task</Button>
+            <Button color="blue">New task</Button>
           </Link>
         }
       />
@@ -141,7 +141,7 @@ function AllTasks() {
           action={
             tasks.length === 0 ? (
               <Link href="/tasks/new">
-                <Button>Assign a task</Button>
+                <Button color="blue">Assign a task</Button>
               </Link>
             ) : null
           }

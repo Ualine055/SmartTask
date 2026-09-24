@@ -105,7 +105,7 @@ function HodDashboard() {
         description="Departmental overview of every assigned task."
         action={
           <Link href="/tasks/new">
-            <Button>New task</Button>
+            <Button color="blue">New task</Button>
           </Link>
         }
       />

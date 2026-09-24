@@ -94,7 +94,7 @@ function LoginForm() {
           />
         </Field>
 
-        <Button type="submit" className="w-full" disabled={submitting}>
+        <Button color="blue" type="submit" className="w-full" disabled={submitting}>
           {submitting ? "Signing in…" : "Sign in"}
         </Button>
       </form>

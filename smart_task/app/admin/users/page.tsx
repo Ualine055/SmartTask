@@ -87,7 +87,7 @@ function AdminUsers() {
         title="User accounts"
         description="Assign roles and control who can sign in."
         action={
-          <Button onClick={() => setShowCreate((v) => !v)}>
+          <Button color="blue" onClick={() => setShowCreate((v) => !v)}>
             {showCreate ? "Close" : "Add user"}
           </Button>
         }
@@ -186,7 +186,7 @@ function AdminUsers() {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <Button
-                        variant={user.isActive ? "secondary" : "primary"}
+                        color={user.isActive ? "white" : "blue"}
                         disabled={isSelf || busyUid === user.uid}
                         onClick={() => void toggleActive(user)}
                       >
@@ -235,7 +235,7 @@ function AdminUsers() {
                       ))}
                     </Select>
                     <Button
-                      variant={user.isActive ? "secondary" : "primary"}
+                      color={user.isActive ? "white" : "blue"}
                       disabled={isSelf || busyUid === user.uid}
                       onClick={() => void toggleActive(user)}
                     >
@@ -374,7 +374,7 @@ function CreateUserForm({ onCreated }: { onCreated: (name: string) => void }) {
           />
         </Field>
 
-        <Button type="submit" disabled={submitting}>
+        <Button color="blue" type="submit" disabled={submitting}>
           {submitting ? "Creating…" : "Create account"}
         </Button>
       </form>

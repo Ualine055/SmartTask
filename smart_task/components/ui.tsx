@@ -32,28 +32,37 @@ export function cx(...parts: Array<string | false | null | undefined>): string {
 
 /* ------------------------------------------------------------------ button */
 
-type ButtonVariant = "primary" | "secondary" | "danger" | "ghost";
+/**
+ * Every button colour, by name. Each button on every screen says which one it
+ * wants - <Button color="red"> - so a button's colour is changed at the button
+ * itself, by swapping one word, not by hunting through this file.
+ *
+ * To change every blue button at once, edit the blue line here.
+ * To change the blue itself, edit --color-brand-600 in app/globals.css.
+ * To add a colour, add a line here and a word to ButtonColor above it.
+ */
+type ButtonColor = "blue" | "white" | "red" | "green" | "plain";
 
-const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary: "bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300",
-  secondary:
-    "bg-white text-ink ring-1 ring-line hover:bg-slate-50 disabled:text-muted",
-  danger: "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300",
-  ghost: "text-muted hover:bg-slate-100 hover:text-ink",
+const BUTTON_COLORS: Record<ButtonColor, string> = {
+  blue: "bg-brand-600 text-white hover:bg-brand-700 disabled:bg-brand-300",
+  white: "bg-white text-ink ring-1 ring-line hover:bg-slate-50 disabled:text-muted",
+  red: "bg-red-600 text-white hover:bg-red-700 disabled:bg-red-300",
+  green: "bg-green-600 text-white hover:bg-green-700 disabled:bg-green-300",
+  plain: "text-muted hover:bg-slate-100 hover:text-ink",
 };
 
 export function Button({
-  variant = "primary",
+  color = "blue",
   className,
   ...props
-}: ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }) {
+}: ButtonHTMLAttributes<HTMLButtonElement> & { color?: ButtonColor }) {
   return (
     <button
       className={cx(
         "inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2",
         "text-sm font-medium transition-colors",
         "disabled:cursor-not-allowed",
-        BUTTON_VARIANTS[variant],
+        BUTTON_COLORS[color],
         className,
       )}
       {...props}

@@ -45,7 +45,7 @@ function MyTaskDetail() {
         description="This task does not exist, or it is not assigned to you."
         action={
           <Link href="/my-tasks">
-            <Button variant="secondary">Back to my tasks</Button>
+            <Button color="white">Back to my tasks</Button>
           </Link>
         }
       />
@@ -203,7 +203,7 @@ function UpdatePanel({ task }: { task: Task }) {
 
         <div className="flex flex-wrap gap-2">
           <Button
-            variant="secondary"
+            color="white"
             disabled={busy}
             onClick={() =>
               void apply({ progressNote }, "Progress note saved.")
@@ -213,7 +213,7 @@ function UpdatePanel({ task }: { task: Task }) {
           </Button>
 
           {task.status !== "ongoing" && task.status !== "completed" ? (
-            <Button
+            <Button color="blue"
               disabled={busy}
               onClick={() => void setStatus("ongoing", "Marked as ongoing.")}
             >
@@ -222,7 +222,7 @@ function UpdatePanel({ task }: { task: Task }) {
           ) : null}
 
           {task.status !== "completed" ? (
-            <Button
+            <Button color="blue"
               disabled={busy}
               onClick={() => void setStatus("completed", "Task marked as completed.")}
             >
@@ -230,7 +230,7 @@ function UpdatePanel({ task }: { task: Task }) {
             </Button>
           ) : (
             <Button
-              variant="secondary"
+              color="white"
               disabled={busy}
               onClick={() => void setStatus("ongoing", "Reopened as ongoing.")}
             >
@@ -240,7 +240,7 @@ function UpdatePanel({ task }: { task: Task }) {
 
           {task.status !== "cannot_complete" ? (
             <Button
-              variant="secondary"
+              color="white"
               disabled={busy}
               onClick={() => setShowDecline((v) => !v)}
             >
@@ -264,19 +264,19 @@ function UpdatePanel({ task }: { task: Task }) {
               />
             </Field>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Button variant="danger" disabled={busy} onClick={() => void decline()}>
+              <Button color="red" disabled={busy} onClick={() => void decline()}>
                 {task.status === "cannot_complete" ? "Update reason" : "Decline task"}
               </Button>
               {task.status === "cannot_complete" ? (
                 <Button
-                  variant="secondary"
+                  color="white"
                   disabled={busy}
                   onClick={() => void setStatus("ongoing", "Task reopened as ongoing.")}
                 >
                   Take it on after all
                 </Button>
               ) : (
-                <Button variant="ghost" onClick={() => setShowDecline(false)}>
+                <Button color="plain" onClick={() => setShowDecline(false)}>
                   Cancel
                 </Button>
               )}

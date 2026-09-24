@@ -48,7 +48,7 @@ export function Protected({
           no matching record in the <code>users</code> collection. An administrator
           needs to create one before you can use SmartTask.
         </p>
-        <Button className="mt-4" variant="secondary" onClick={() => void signOut()}>
+        <Button className="mt-4" color="white" onClick={() => void signOut()}>
           Sign out
         </Button>
       </Notice>
@@ -62,7 +62,7 @@ export function Protected({
           Your account has been deactivated by an administrator. Please contact the
           School of Computing and IT office.
         </Alert>
-        <Button className="mt-4" variant="secondary" onClick={() => void signOut()}>
+        <Button className="mt-4" color="white" onClick={() => void signOut()}>
           Sign out
         </Button>
       </Notice>

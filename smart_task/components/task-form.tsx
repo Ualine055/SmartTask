@@ -186,11 +186,11 @@ export function TaskForm({
         </Field>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          <Button type="submit" disabled={submitting || lecturers.length === 0}>
+          <Button color="blue" type="submit" disabled={submitting || lecturers.length === 0}>
             {submitting ? "Saving…" : submitLabel}
           </Button>
           {onCancel ? (
-            <Button type="button" variant="secondary" onClick={onCancel}>
+            <Button type="button" color="white" onClick={onCancel}>
               Cancel
             </Button>
           ) : null}

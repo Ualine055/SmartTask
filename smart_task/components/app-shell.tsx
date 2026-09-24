@@ -83,7 +83,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             ) : null}
 
             <Button
-              variant="secondary"
+              color="white"
               className="hidden sm:inline-flex"
               onClick={() => void signOut()}
             >
@@ -139,7 +139,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Link>
               ))}
               <Button
-                variant="secondary"
+                color="white"
                 className="mt-2"
                 onClick={() => void signOut()}
               >
@@ -155,7 +155,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </main>
 
       <footer className="border-t border-line bg-white px-4 py-4 text-center text-xs text-muted">
-        SmartTask · School of Computing and IT, University of Kigali
+        2026 SmartTask · School of Computing and IT, University of Kigali
       </footer>
     </div>
   );

@@ -49,7 +49,7 @@ function TaskDetail() {
         description="It may have been deleted."
         action={
           <Link href="/tasks">
-            <Button variant="secondary">Back to all tasks</Button>
+            <Button color="white">Back to all tasks</Button>
           </Link>
         }
       />
@@ -127,10 +127,10 @@ function TaskDetail() {
         description={`Assigned to ${task.assignedToName} by ${task.assignedByName}`}
         action={
           <div className="flex gap-2">
-            <Button variant="secondary" onClick={() => setEditing(true)}>
+            <Button color="white" onClick={() => setEditing(true)}>
               Edit
             </Button>
-            <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
+            <Button color="red" onClick={() => setConfirmingDelete(true)}>
               Delete
             </Button>
           </div>
@@ -148,10 +148,10 @@ function TaskDetail() {
             be undone.
           </p>
           <div className="mt-3 flex gap-2">
-            <Button variant="danger" disabled={deleting} onClick={() => void handleDelete()}>
+            <Button color="red" disabled={deleting} onClick={() => void handleDelete()}>
               {deleting ? "Deleting…" : "Yes, delete it"}
             </Button>
-            <Button variant="secondary" onClick={() => setConfirmingDelete(false)}>
+            <Button color="white" onClick={() => setConfirmingDelete(false)}>
               Cancel
             </Button>
           </div>

@@ -8,6 +8,66 @@ the nearby search term in each row is what to trust.
 
 ---
 
+## The trick that always works
+
+Everything visible on screen is written somewhere as plain text. So when
+something is pointed at, **search the project for the words that are on it**.
+
+In VS Code: `Ctrl+Shift+F`, type the visible text, press Enter.
+
+- Pointing at a button reading **Create account**? Search `Create account`.
+- Pointing at **Sign in**? Search `Sign in`.
+- A column header reading **Department**? Search `Department`.
+
+This finds anything in seconds and never goes out of date, whatever this
+document says. The tables below are faster when they apply; this works when
+they don't.
+
+For something with no words — a colour, a corner radius, a shadow — go
+straight to `app/globals.css` or `components/ui.tsx`. Between them they hold
+nearly every visual decision in the app.
+
+## How the project is laid out
+
+```
+smart_task/
+├── app/              one folder per URL; page.tsx is that screen
+│   ├── login/        /login
+│   ├── register/     /register
+│   ├── dashboard/    /dashboard
+│   ├── tasks/        /tasks, /tasks/new, /tasks/[id]
+│   ├── my-tasks/     /my-tasks and /my-tasks/[id]
+│   ├── admin/        /admin/users
+│   ├── api/          server routes - no visuals here
+│   ├── layout.tsx    wraps every page; sets the tab title
+│   └── globals.css   COLOURS AND FONTS for the whole app
+│
+├── components/       pieces shared by several screens
+│   ├── ui.tsx        THE DESIGN SYSTEM - button, input, card, alert
+│   ├── app-shell.tsx header, navigation, footer
+│   ├── badges.tsx    the coloured status/priority/role pills
+│   ├── task-form.tsx the create/edit task form
+│   └── task-row.tsx  one row in a task list
+│
+└── lib/              logic and data. No visuals - never edit for appearance
+    ├── types.ts      roles, statuses, priorities, departments
+    ├── tasks.ts      overdue and due-soon rules
+    ├── email.ts      the email templates
+    └── firebase/     database connection
+```
+
+Two rules that make this easy to reason about:
+
+**Appearance lives in `app/globals.css` and `components/`. Never in `lib/`.**
+If a change is about how something *looks*, `lib/` is the wrong folder.
+
+**If the same style would be edited twice, it is the wrong file.** A button is
+defined once in `ui.tsx` and used everywhere, so changing it there changes it
+everywhere. Editing a colour on one page only means the shared component was
+missed.
+
+---
+
 ## Colours
 
 Almost every colour comes from one of three places.

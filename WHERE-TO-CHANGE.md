@@ -87,6 +87,48 @@ the entire application — buttons, links, the logo mark, badges, focus rings.
 One line, everything moves together. That is the answer to "can you change the
 colour scheme?"
 
+## Worked example: "change the colour of the Create account button"
+
+The text and the colour are in different files. The button itself carries no
+colour at all:
+
+```tsx
+// app/register/page.tsx
+<Button type="submit" className="w-full" disabled={submitting}>
+  {submitting ? "Creating account…" : "Create account"}
+</Button>
+```
+
+It names no variant, so it is `primary`, and the colour arrives through a chain:
+
+```
+app/register/page.tsx   <Button>            the button is USED here
+        ↓
+components/ui.tsx 22    primary: "bg-brand-600 …"   the variant is DEFINED here
+        ↓
+app/globals.css 9       --color-brand-600: #2b56bd  the colour ITSELF is here
+```
+
+So there are three honest answers, and which one is right depends on the ask:
+
+| Ask | Edit | Effect |
+|---|---|---|
+| Change the colour scheme | `globals.css` 9 | Every button, link, badge and focus ring |
+| Make the main buttons green | `ui.tsx` 22 | Every primary button |
+| Make only this button green | `ui.tsx` 21-26, add a variant | Only where that variant is used |
+
+**Do not put `bg-green-600` in the button's own `className`.** Tailwind does not
+guarantee it beats `bg-brand-600` — which wins depends on the order the two land
+in the generated stylesheet, not the order they are written. Add a variant
+instead:
+
+```tsx
+success: "bg-green-600 text-white hover:bg-green-700",
+```
+
+then `<Button variant="success">`. That is predictable, and it demonstrates the
+pattern rather than fighting it.
+
 ## Buttons
 
 `components/ui.tsx` 18-23. Four variants, one object:

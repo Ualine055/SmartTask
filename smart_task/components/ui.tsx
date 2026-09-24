@@ -7,8 +7,9 @@
  * it everywhere. If the same edit would have to be made twice, this is the
  * file that was missed.
  *
- *   Button        four looks: primary (the default, blue), secondary (white),
- *                 danger (red, for delete and decline), ghost (plain text)
+ *   Button        each one names its own colour where it is written:
+ *                 blue (the default), white, red, green, plain.
+ *                 Red is reserved for destructive actions - delete, decline.
  *   Input etc.    every text box shares the FIELD line below
  *   Card          the white box with a border
  *   Alert         the coloured message strip

@@ -76,7 +76,8 @@ Almost every colour comes from one of three places.
 |---|---|---|
 | The whole app's blue | `app/globals.css` 4-10 | `--color-brand-600` |
 | Text, borders, background | `app/globals.css` 11-14 | `--color-ink` |
-| Any button's colour | `components/ui.tsx` 18-23 | `BUTTON_VARIANTS` |
+| One button's colour | the `color="…"` on the button itself | its text |
+| Every button of one colour | `components/ui.tsx` | `BUTTON_COLORS` |
 | Status badge colours | `components/badges.tsx` 9-14 | `STATUS_TONES` |
 | Priority badge colours | `components/badges.tsx` 30-33 | `PRIORITY_TONES` |
 | Role badge colours | `components/badges.tsx` 44-47 | `ROLE_TONES` |
@@ -87,58 +88,44 @@ the entire application — buttons, links, the logo mark, badges, focus rings.
 One line, everything moves together. That is the answer to "can you change the
 colour scheme?"
 
-## Worked example: "change the colour of the Create account button"
+## Buttons — change the colour at the button
 
-The text and the colour are in different files. The button itself carries no
-colour at all:
+Every button says its own colour, in plain words, where it is written:
 
 ```tsx
-// app/register/page.tsx
-<Button type="submit" className="w-full" disabled={submitting}>
-  {submitting ? "Creating account…" : "Create account"}
-</Button>
+<Button color="blue">New task</Button>
+<Button color="red">Delete</Button>
+<Button color="white">Cancel</Button>
 ```
 
-It names no variant, so it is `primary`, and the colour arrives through a chain:
+**To change one button, change that one word.** Nothing else to open.
 
-```
-app/register/page.tsx   <Button>            the button is USED here
-        ↓
-components/ui.tsx 22    primary: "bg-brand-600 …"   the variant is DEFINED here
-        ↓
-app/globals.css 9       --color-brand-600: #2b56bd  the colour ITSELF is here
-```
+The five words: `blue` · `white` · `red` · `green` · `plain`
 
-So there are three honest answers, and which one is right depends on the ask:
+Red is kept for destructive actions — delete and decline — so the colour
+carries meaning rather than decoration.
 
 | Ask | Edit | Effect |
 |---|---|---|
-| Change the colour scheme | `globals.css` 9 | Every button, link, badge and focus ring |
-| Make the main buttons green | `ui.tsx` 22 | Every primary button |
-| Make only this button green | `ui.tsx` 21-26, add a variant | Only where that variant is used |
+| This one button | the `color="…"` on it | Only that button |
+| Every blue button at once | `ui.tsx`, the `blue:` line | Every button saying blue |
+| The whole colour scheme | `globals.css` 9 | Buttons, links, badges, focus rings |
 
-**Do not put `bg-green-600` in the button's own `className`.** Tailwind does not
-guarantee it beats `bg-brand-600` — which wins depends on the order the two land
-in the generated stylesheet, not the order they are written. Add a variant
-instead:
+**Do not write `className="bg-green-600"` on a button.** Tailwind does not
+guarantee it beats the colour the button already has — which wins depends on the
+order the two land in the generated stylesheet, not the order they are written.
+Use the `color` word, which always wins because there is only ever one.
 
-```tsx
-success: "bg-green-600 text-white hover:bg-green-700",
-```
-
-then `<Button variant="success">`. That is predictable, and it demonstrates the
-pattern rather than fighting it.
-
-## Buttons
-
-`components/ui.tsx` 18-23. Four variants, one object:
+To add a colour, add a line to `BUTTON_COLORS` in `ui.tsx` and its name to
+`ButtonColor` just above:
 
 ```ts
-const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary:   "bg-brand-600 text-white hover:bg-brand-700 …",
-  secondary: "bg-white text-ink ring-1 ring-line …",
-  danger:    "bg-red-600 text-white hover:bg-red-700 …",
-  ghost:     "text-muted hover:bg-slate-100 …",
+const BUTTON_COLORS: Record<ButtonColor, string> = {
+  blue:  "bg-brand-600 text-white hover:bg-brand-700 …",
+  white: "bg-white text-ink ring-1 ring-line …",
+  red:   "bg-red-600 text-white hover:bg-red-700 …",
+  green: "bg-green-600 text-white hover:bg-green-700 …",
+  plain: "text-muted hover:bg-slate-100 …",
 };
 ```
 

@@ -300,6 +300,71 @@ fictional mailboxes, so set `DEMO_LECTURER_EMAILS` to real inboxes, or register 
 on one. See section 13. `npm run check:email <address>` proves the setup independently and
 reports which provider is active.
 
+### Following one email through the code
+
+The HoD presses **Assign task** and the lecturer's inbox lights up. Six steps,
+in order — this is the trace to walk through if asked to show it.
+
+**1. The task is saved.** `app/tasks/new/page.tsx` writes the document straight
+to Firestore from the browser. Nothing has been emailed yet.
+
+**2. The page asks for the email** — `app/tasks/new/page.tsx` 49:
+
+```ts
+await notifyTask(created.id, "assigned");
+```
+
+Only the new task's id and the word `assigned`. No addresses, no wording.
+
+**3. A signed request goes to the server** — `lib/notify.ts` 22:
+
+```ts
+fetch("/api/notify/task", {
+  method: "POST",
+  headers: { authorization: `Bearer ${token}` },
+  body: JSON.stringify({ taskId, event }),
+});
+```
+
+The token proves who is asking. Without this hop the browser would need the
+mail credentials, and anything the browser holds, its user can read.
+
+**4. The server checks the caller and decides the recipient** —
+`app/api/notify/task/route.ts` 64:
+
+```ts
+if (caller.role !== "hod") throw new ApiError(403, "Only a Head of Department…");
+recipientUid = task.assignedTo;
+```
+
+The task is re-read server-side with the Admin SDK, so the recipient comes from
+the stored document rather than the request. That is what stops the route being
+used to mail arbitrary people.
+
+**5. The address is looked up** — same file, 77:
+
+```ts
+const user = (await db.collection("users").doc(recipientUid).get()).data();
+```
+
+`users/{uid}.email` — the address that lecturer signed in with.
+
+**6. The email is built and sent** — same file, 139, using the templates in
+`lib/email.ts`:
+
+```ts
+await mail.sendEmail({ to: user.email, ...message });
+```
+
+`sendEmail` is the single exit point: Gmail over SMTP when an app password is
+set, Resend otherwise.
+
+**The subject is decided, not passed in.** `assignedSubject` compares the task's
+`createdAt` and `updatedAt`: written together means new, more than five seconds
+apart means it was moved to someone else. So a reassignment reads *"Task
+reassigned to you"* rather than *"New task assigned"*, and a caller cannot fake
+either wording.
+
 ### The three emails the system sends
 
 The cron job above covers deadlines. Two more go out the moment something happens,

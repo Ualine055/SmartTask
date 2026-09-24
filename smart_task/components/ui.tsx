@@ -1,5 +1,21 @@
 "use client";
 
+/**
+ * EVERY BUTTON, INPUT, CARD AND ALERT IN THE APP IS DEFINED HERE.
+ *
+ * Each is written once and used on every screen, so changing it here changes
+ * it everywhere. If the same edit would have to be made twice, this is the
+ * file that was missed.
+ *
+ *   Button        four looks: primary (the default, blue), secondary (white),
+ *                 danger (red, for delete and decline), ghost (plain text)
+ *   Input etc.    every text box shares the FIELD line below
+ *   Card          the white box with a border
+ *   Alert         the coloured message strip
+ *
+ * The colours themselves are in app/globals.css.
+ */
+
 import { useState } from "react";
 import type {
   ButtonHTMLAttributes,

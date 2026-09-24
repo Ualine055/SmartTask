@@ -1,17 +1,5 @@
 @import "tailwindcss";
 
-/* ===========================================================================
- * EVERY COLOUR IN THE APP IS IN THIS BLOCK.
- *
- * brand-600 is the main blue: buttons, links, the logo, focus outlines.
- * Change that one line and the whole app changes colour.
- *
- * ink    = normal text        muted  = grey text
- * line   = borders            canvas = page background
- *
- * Components live in components/ui.tsx.
- * ======================================================================== */
-
 @theme inline {
   --color-brand-50: #eef4ff;
   --color-brand-100: #d9e5ff;
